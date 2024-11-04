@@ -1,0 +1,2 @@
+SHELL=/bin/sh
+0 1 * * *   /app/bin/console mariaDbBackup:aws >> /app/log/cron.log 2>&1
