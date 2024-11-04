@@ -30,7 +30,7 @@ DB_USER=your_db_user
 DB_PASSWORD=your_db_password
 DB_DATABASE=your_db_name
 
-AWS_KEY=your_aws_key
-AWS_SECRET=your_aws_secret
+AWS_ACCESS_KEY=your_aws_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret
 AWS_REGION=your_aws_region
 AWS_BUCKET=your_aws_bucket
