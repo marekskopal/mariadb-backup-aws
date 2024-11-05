@@ -1,5 +1,5 @@
 {
-    "name": "marekskopal/cycle-enum",
+    "name": "marekskopal/mariadb-backup-aws",
     "type": "library",
     "description": "MariaDB backup to AWS S3",
     "keywords": [
