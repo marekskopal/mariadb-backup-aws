@@ -12,4 +12,6 @@ services:
             AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
             AWS_REGION: ${AWS_REGION}
             AWS_BUCKET: ${AWS_BUCKET}
+            AWS_ROOT_PATH: ${AWS_ROOT_PATH:-backup}
+            AWS_MAX_BACKUPS: ${AWS_MAX_BACKUPS:-30}
         restart: unless-stopped

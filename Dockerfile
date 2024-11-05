@@ -18,6 +18,9 @@ COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 
 COPY ./docker/etc/supervisor/supervisor.conf /etc/supervisor/supervisor.conf
 
+ENV AWS_ROOT_PATH=backup
+ENV AWS_MAX_BACKUPS=30
+
 ENTRYPOINT /usr/bin/supervisord -c /etc/supervisor/supervisor.conf
 
 COPY ./docker/etc/cron.d /etc/cron.d
