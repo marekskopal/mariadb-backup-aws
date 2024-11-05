@@ -36,7 +36,7 @@ final readonly class AwsProvider
         $datePath = $date->format('Y-m-d');
 
         $targetPath = implode('/', [
-            ltrim($this->rootPath, '/'),
+            trim($this->rootPath, '/'),
             $datePath,
             basename($backupFileName),
         ]);
@@ -55,6 +55,7 @@ final readonly class AwsProvider
         /** @var array{Contents: list<array{Key: string, LastModified: DateTimeImmutable}>} $objects */
         $objects = $this->s3Client->listObjects([
             'Bucket' => $this->awsBucket,
+            'Prefix' => trim($this->rootPath, '/') . '/',
         ]);
 
         $objectsCount = count($objects['Contents']);
@@ -72,6 +73,7 @@ final readonly class AwsProvider
         /** @var array{Contents: list<array{Key: string, LastModified: DateTimeImmutable}>} $objects */
         $objects = $this->s3Client->listObjects([
             'Bucket' => $this->awsBucket,
+            'Prefix' => trim($this->rootPath, '/') . '/',
         ]);
 
         $oldestObject = $objects['Contents'][0];

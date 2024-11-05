@@ -13,7 +13,7 @@ final readonly class MariaDbDump
         private string $mariaDbUser,
         #[SensitiveParameter] private string $mariaDbPassword,
         private string $maraDbDatabase,
-        private string $backupFileName,
+        private string $backupFilePath,
     ) {
     }
 
@@ -24,7 +24,7 @@ final readonly class MariaDbDump
 
     public function clean(): void
     {
-        unlink($this->getBackupFilePath());
+        unlink($this->backupFilePath);
     }
 
     private function createDumpCommand(): string
@@ -40,14 +40,9 @@ final readonly class MariaDbDump
             '|',
             'gzip',
             '>',
-            escapeshellarg($this->getBackupFilePath()),
+            escapeshellarg($this->backupFilePath),
         ];
 
         return implode(' ', $commandParts);
-    }
-
-    private function getBackupFilePath(): string
-    {
-        return sys_get_temp_dir() . '/' . $this->backupFileName;
     }
 }

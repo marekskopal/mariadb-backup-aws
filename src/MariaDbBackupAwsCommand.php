@@ -31,7 +31,7 @@ final class MariaDbBackupAwsCommand extends Command
 
         $this->setDescription('Backup MariaDB to AWS S3');
 
-        $this->addOption(self::OptionHost, 'h', InputArgument::OPTIONAL, 'MariaDB host');
+        $this->addOption(self::OptionHost, 'H', InputArgument::OPTIONAL, 'MariaDB host');
         $this->addOption(self::OptionUser, 'u', InputArgument::OPTIONAL, 'MariaDB user');
         $this->addOption(self::OptionPassword, 'p', InputArgument::OPTIONAL, 'MariaDB password');
         $this->addOption(self::OptionDatabase, 'd', InputArgument::OPTIONAL, 'MariaDB database');
@@ -46,14 +46,14 @@ final class MariaDbBackupAwsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $backupFileName = date('Y-m-d_H-i-s') . '.sql.gz';
+        $backupFilePath = sys_get_temp_dir() . '/' . date('Y-m-d_H-i-s') . '.sql.gz';
 
         $mariaDbDump = new MariaDbDump(
             mariaDbHost: $this->getOptionOrEnv($input, self::OptionHost, 'DB_HOST'),
             mariaDbUser: $this->getOptionOrEnv($input, self::OptionUser, 'DB_USER'),
             mariaDbPassword: $this->getOptionOrEnv($input, self::OptionPassword, 'DB_PASSWORD'),
             maraDbDatabase: $this->getOptionOrEnv($input, self::OptionDatabase, 'DB_DATABASE'),
-            backupFileName: $backupFileName,
+            backupFilePath: $backupFilePath,
         );
         $mariaDbDump->dump();
 
@@ -65,7 +65,7 @@ final class MariaDbBackupAwsCommand extends Command
             rootPath: $this->getOptionOrEnv($input, self::OptionAwsRootPath, 'AWS_ROOT_PATH', 'backup'),
             maxBackups: (int) $this->getOptionOrEnv($input, self::OptionAwsMaxBackups, 'AWS_MAX_BACKUPS', '30'),
         );
-        $awsProvider->upload($backupFileName);
+        $awsProvider->upload($backupFilePath);
 
         $mariaDbDump->clean();
 
