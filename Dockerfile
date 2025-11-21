@@ -1,6 +1,6 @@
-FROM composer:2.8.5 AS composer
-FROM mlocati/php-extension-installer:2.7.14 AS php-extension-installer
-FROM php:8.4.3-cli-alpine AS php
+FROM composer:2.9.2 AS composer
+FROM mlocati/php-extension-installer:2.9.18 AS php-extension-installer
+FROM php:8.5.0-cli-alpine AS php
 
 COPY --from=php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 
