@@ -52,7 +52,7 @@ final class MariaDbBackupAwsCommand extends Command
             mariaDbHost: $this->getOptionOrEnv($input, self::OptionHost, 'DB_HOST'),
             mariaDbUser: $this->getOptionOrEnv($input, self::OptionUser, 'DB_USER'),
             mariaDbPassword: $this->getOptionOrEnv($input, self::OptionPassword, 'DB_PASSWORD'),
-            maraDbDatabase: $this->getOptionOrEnv($input, self::OptionDatabase, 'DB_DATABASE'),
+            mariaDbDatabase: $this->getOptionOrEnv($input, self::OptionDatabase, 'DB_DATABASE'),
             backupFilePath: $backupFilePath,
         );
         $mariaDbDump->dump();

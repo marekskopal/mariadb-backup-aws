@@ -12,19 +12,24 @@ final readonly class MariaDbDump
         private string $mariaDbHost,
         private string $mariaDbUser,
         #[SensitiveParameter] private string $mariaDbPassword,
-        private string $maraDbDatabase,
+        private string $mariaDbDatabase,
         private string $backupFilePath,
     ) {
     }
 
     public function dump(): void
     {
-        exec($this->createDumpCommand());
+        exec($this->createDumpCommand(), result_code: $returnCode);
+        if ($returnCode !== 0) {
+            throw new \RuntimeException(sprintf('MariaDB dump failed with exit code %d', $returnCode));
+        }
     }
 
     public function clean(): void
     {
-        unlink($this->backupFilePath);
+        if (!unlink($this->backupFilePath)) {
+            throw new \RuntimeException(sprintf('Failed to delete temporary backup file: %s', $this->backupFilePath));
+        }
     }
 
     private function createDumpCommand(): string
@@ -35,8 +40,8 @@ final readonly class MariaDbDump
             escapeshellarg($this->mariaDbHost),
             '-u',
             escapeshellarg($this->mariaDbUser),
-            '-p' . $this->mariaDbPassword,
-            escapeshellarg($this->maraDbDatabase),
+            escapeshellarg('-p' . $this->mariaDbPassword),
+            escapeshellarg($this->mariaDbDatabase),
             '|',
             'gzip',
             '>',
