@@ -19,7 +19,7 @@
     "require": {
         "php": ">=8.3",
         "aws/aws-sdk-php": "^3.325",
-        "symfony/console": "^7.1"
+        "symfony/console": "^8.0"
     },
     "require-dev": {
         "phpstan/extension-installer": "^1.4",
@@ -27,7 +27,7 @@
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
-        "phpunit/phpunit": "^12.4",
+        "phpunit/phpunit": "^13.0",
         "shipmonk/phpstan-rules": "^4.1",
         "slevomat/coding-standard": "^8.14",
         "spatie/ray": "^1.39",
