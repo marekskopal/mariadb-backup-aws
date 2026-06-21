@@ -10,6 +10,7 @@ A small, dependable CLI tool that dumps one or more MariaDB databases, compresse
 
 ## Features
 
+- **Consistent, complete dumps** — uses `--single-transaction` (a non-locking, point-in-time snapshot of InnoDB) together with `--routines`, `--events` and `--triggers`, and accepts extra `mariadb-dump` options when you need them.
 - **Streamed gzip dumps** — `mariadb-dump` output is compressed on the fly; no large uncompressed file is kept on disk.
 - **Fails loudly, never silently** — the real `mariadb-dump` exit code is checked and an empty dump is rejected, so a broken backup is never uploaded or rotated in.
 - **Credentials stay private** — the database password is passed through a temporary `--defaults-extra-file`, never on the command line, so it does not appear in the process list. The temporary dump is written with `0600` permissions and always cleaned up.
@@ -46,9 +47,11 @@ Each option can be set via a CLI flag or an environment variable. CLI options ta
 | CLI option            | Short | Environment variable     | Required | Default  | Description                                                        |
 | --------------------- | ----- | ------------------------ | -------- | -------- | ------------------------------------------------------------------ |
 | `--host`              | `-H`  | `DB_HOST`                | yes      | —        | MariaDB host                                                       |
+| `--port`              | `-P`  | `DB_PORT`                | no       | `3306`   | MariaDB port                                                       |
 | `--user`              | `-u`  | `DB_USER`                | yes      | —        | MariaDB user                                                       |
 | `--password`          | `-p`  | `DB_PASSWORD`            | yes      | —        | MariaDB password                                                   |
 | `--database`          | `-d`  | `DB_DATABASE`            | no       | *(all)*  | Database name; comma-separated for several; all databases if empty |
+| `--dump-options`      | —     | `DB_DUMP_OPTIONS`        | no       | —        | Extra `mariadb-dump` options (space-separated), appended to defaults |
 | `--aws-access-key`    | `-a`  | `AWS_ACCESS_KEY`         | yes      | —        | AWS access key                                                     |
 | `--aws-secret`        | `-s`  | `AWS_SECRET_ACCESS_KEY`  | yes      | —        | AWS secret access key                                              |
 | `--aws-region`        | `-r`  | `AWS_REGION`             | yes      | —        | AWS region                                                         |
@@ -130,7 +133,7 @@ Omit `--database` to back up all databases, or pass a comma-separated list (e.g.
 
 ## How it works
 
-1. `mariadb-dump` is launched via `proc_open` (no shell), with credentials supplied through a temporary `0600` option file.
+1. `mariadb-dump` is launched via `proc_open` (no shell), with credentials and port supplied through a temporary `0600` option file, using a consistent, complete set of dump options.
 2. Its stdout is streamed through gzip into a temporary `0600` file. The exit code and output are verified.
 3. The compressed dump is uploaded to S3 with AES‑256 server-side encryption.
 4. Objects under the prefix are listed and the oldest beyond `AWS_MAX_BACKUPS` are deleted.
