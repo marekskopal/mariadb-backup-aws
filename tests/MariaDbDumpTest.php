@@ -15,13 +15,7 @@ final class MariaDbDumpTest extends TestCase
     {
         $this->expectNotToPerformAssertions();
 
-        $dump = new MariaDbDump(
-            mariaDbHost: 'localhost',
-            mariaDbUser: 'user',
-            mariaDbPassword: 'password',
-            mariaDbDatabase: 'database',
-            backupFilePath: '/tmp/test.sql.gz',
-        );
+        $dump = $this->createDump('database');
         unset($dump);
     }
 
@@ -55,37 +49,28 @@ final class MariaDbDumpTest extends TestCase
         );
     }
 
-    private function createDump(string $database): MariaDbDump
+    public function testCreateDefaultsFileContentDoesNotLeakCredentialsToArgv(): void
     {
-        return new MariaDbDump(
-            mariaDbHost: 'db.example.com',
-            mariaDbUser: 'backup',
-            mariaDbPassword: 's3cr3t',
-            mariaDbDatabase: $database,
-            backupFilePath: '/tmp/test.sql.gz',
+        $dump = $this->createDump('app');
+
+        self::assertSame(
+            "[client]\nhost=\"db.example.com\"\nport=3306\nuser=\"backup\"\npassword=\"s3cr3t\"\n",
+            $dump->createDefaultsFileContent(),
         );
     }
 
-    public function testCreateDefaultsFileContentDoesNotLeakCredentialsToArgv(): void
+    public function testCreateDefaultsFileContentContainsConfiguredPort(): void
     {
-        $dump = new MariaDbDump(
-            mariaDbHost: 'db.example.com',
-            mariaDbUser: 'backup',
-            mariaDbPassword: 's3cr3t',
-            mariaDbDatabase: 'app',
-            backupFilePath: '/tmp/test.sql.gz',
-        );
+        $dump = $this->createDump('app', 3307);
 
-        self::assertSame(
-            "[client]\nhost=\"db.example.com\"\nuser=\"backup\"\npassword=\"s3cr3t\"\n",
-            $dump->createDefaultsFileContent(),
-        );
+        self::assertStringContainsString("port=3307\n", $dump->createDefaultsFileContent());
     }
 
     public function testCreateDefaultsFileContentEscapesSpecialCharacters(): void
     {
         $dump = new MariaDbDump(
             mariaDbHost: 'localhost',
+            mariaDbPort: 3306,
             mariaDbUser: 'backup',
             mariaDbPassword: 'pa"ss#wo\\rd',
             mariaDbDatabase: 'app',
@@ -93,5 +78,17 @@ final class MariaDbDumpTest extends TestCase
         );
 
         self::assertStringContainsString('password="pa\\"ss#wo\\\\rd"', $dump->createDefaultsFileContent());
+    }
+
+    private function createDump(string $database, int $port = 3306): MariaDbDump
+    {
+        return new MariaDbDump(
+            mariaDbHost: 'db.example.com',
+            mariaDbPort: $port,
+            mariaDbUser: 'backup',
+            mariaDbPassword: 's3cr3t',
+            mariaDbDatabase: $database,
+            backupFilePath: '/tmp/test.sql.gz',
+        );
     }
 }

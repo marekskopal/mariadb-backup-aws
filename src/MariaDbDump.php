@@ -12,6 +12,7 @@ final readonly class MariaDbDump
 
     public function __construct(
         private string $mariaDbHost,
+        private int $mariaDbPort,
         private string $mariaDbUser,
         #[SensitiveParameter] private string $mariaDbPassword,
         private string $mariaDbDatabase,
@@ -139,8 +140,9 @@ final readonly class MariaDbDump
     public function createDefaultsFileContent(): string
     {
         return sprintf(
-            "[client]\nhost=%s\nuser=%s\npassword=%s\n",
+            "[client]\nhost=%s\nport=%d\nuser=%s\npassword=%s\n",
             $this->quote($this->mariaDbHost),
+            $this->mariaDbPort,
             $this->quote($this->mariaDbUser),
             $this->quote($this->mariaDbPassword),
         );

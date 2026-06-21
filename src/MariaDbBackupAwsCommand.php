@@ -15,6 +15,7 @@ final class MariaDbBackupAwsCommand extends Command
     private const string CommandName = 'mariaDbBackup:aws';
 
     private const string OptionHost = 'host';
+    private const string OptionPort = 'port';
     private const string OptionUser = 'user';
     private const string OptionPassword = 'password';
     private const string OptionDatabase = 'database';
@@ -33,6 +34,7 @@ final class MariaDbBackupAwsCommand extends Command
         $this->setDescription('Backup MariaDB to AWS S3');
 
         $this->addOption(self::OptionHost, 'H', InputOption::VALUE_REQUIRED, 'MariaDB host');
+        $this->addOption(self::OptionPort, 'P', InputOption::VALUE_REQUIRED, 'MariaDB port (default 3306)');
         $this->addOption(self::OptionUser, 'u', InputOption::VALUE_REQUIRED, 'MariaDB user');
         $this->addOption(self::OptionPassword, 'p', InputOption::VALUE_REQUIRED, 'MariaDB password');
         $this->addOption(
@@ -59,6 +61,7 @@ final class MariaDbBackupAwsCommand extends Command
 
         $mariaDbDump = new MariaDbDump(
             mariaDbHost: $this->getOptionOrEnv($input, self::OptionHost, 'DB_HOST'),
+            mariaDbPort: (int) $this->getOptionOrEnv($input, self::OptionPort, 'DB_PORT', '3306'),
             mariaDbUser: $this->getOptionOrEnv($input, self::OptionUser, 'DB_USER'),
             mariaDbPassword: $this->getOptionOrEnv($input, self::OptionPassword, 'DB_PASSWORD'),
             mariaDbDatabase: $this->getOptionOrEnv($input, self::OptionDatabase, 'DB_DATABASE', ''),
