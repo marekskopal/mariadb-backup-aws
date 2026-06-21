@@ -46,7 +46,10 @@ final class MariaDbBackupAwsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $backupFilePath = sys_get_temp_dir() . '/' . date('Y-m-d_H-i-s') . '.sql.gz';
+        // A random suffix keeps two runs in the same second from overwriting each other
+        // (locally and in the S3 key, which is derived from this filename).
+        $backupFileName = sprintf('%s_%s.sql.gz', date('Y-m-d_H-i-s'), bin2hex(random_bytes(4)));
+        $backupFilePath = sys_get_temp_dir() . '/' . $backupFileName;
 
         $mariaDbDump = new MariaDbDump(
             mariaDbHost: $this->getOptionOrEnv($input, self::OptionHost, 'DB_HOST'),
