@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace MarekSkopal\MariaDbBackup;
 
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 final class MariaDbBackupAwsCommand extends Command
@@ -31,17 +31,17 @@ final class MariaDbBackupAwsCommand extends Command
 
         $this->setDescription('Backup MariaDB to AWS S3');
 
-        $this->addOption(self::OptionHost, 'H', InputArgument::OPTIONAL, 'MariaDB host');
-        $this->addOption(self::OptionUser, 'u', InputArgument::OPTIONAL, 'MariaDB user');
-        $this->addOption(self::OptionPassword, 'p', InputArgument::OPTIONAL, 'MariaDB password');
-        $this->addOption(self::OptionDatabase, 'd', InputArgument::OPTIONAL, 'MariaDB database');
+        $this->addOption(self::OptionHost, 'H', InputOption::VALUE_REQUIRED, 'MariaDB host');
+        $this->addOption(self::OptionUser, 'u', InputOption::VALUE_REQUIRED, 'MariaDB user');
+        $this->addOption(self::OptionPassword, 'p', InputOption::VALUE_REQUIRED, 'MariaDB password');
+        $this->addOption(self::OptionDatabase, 'd', InputOption::VALUE_REQUIRED, 'MariaDB database');
 
-        $this->addOption(self::OptionAwsAccessKey, 'a', InputArgument::OPTIONAL, 'AWS access key');
-        $this->addOption(self::OptionAwsSecretAccessKey, 's', InputArgument::OPTIONAL, 'AWS secret access key');
-        $this->addOption(self::OptionAwsRegion, 'r', InputArgument::OPTIONAL, 'AWS region');
-        $this->addOption(self::OptionAwsBucket, 'b', InputArgument::OPTIONAL, 'AWS bucket name');
-        $this->addOption(self::OptionAwsRootPath, 'o', InputArgument::OPTIONAL, 'AWS root path');
-        $this->addOption(self::OptionAwsMaxBackups, 'm', InputArgument::OPTIONAL, 'AWS max. backups');
+        $this->addOption(self::OptionAwsAccessKey, 'a', InputOption::VALUE_REQUIRED, 'AWS access key');
+        $this->addOption(self::OptionAwsSecretAccessKey, 's', InputOption::VALUE_REQUIRED, 'AWS secret access key');
+        $this->addOption(self::OptionAwsRegion, 'r', InputOption::VALUE_REQUIRED, 'AWS region');
+        $this->addOption(self::OptionAwsBucket, 'b', InputOption::VALUE_REQUIRED, 'AWS bucket name');
+        $this->addOption(self::OptionAwsRootPath, 'o', InputOption::VALUE_REQUIRED, 'AWS root path');
+        $this->addOption(self::OptionAwsMaxBackups, 'm', InputOption::VALUE_REQUIRED, 'AWS max. backups');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
