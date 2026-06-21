@@ -40,7 +40,8 @@ final readonly class AwsProvider
         ]);
     }
 
-    public function upload(string $backupFileName): void
+    /** Uploads the backup and returns the S3 key it was stored under. */
+    public function upload(string $backupFileName): string
     {
         $date = new DateTimeImmutable();
         $datePath = $date->format('Y-m-d');
@@ -59,6 +60,8 @@ final readonly class AwsProvider
         ]);
 
         $this->checkMaxBackups();
+
+        return $targetPath;
     }
 
     private function checkMaxBackups(): void

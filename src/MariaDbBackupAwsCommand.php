@@ -8,6 +8,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class MariaDbBackupAwsCommand extends Command
 {
@@ -72,14 +73,21 @@ final class MariaDbBackupAwsCommand extends Command
             maxBackups: (int) $this->getOptionOrEnv($input, self::OptionAwsMaxBackups, 'AWS_MAX_BACKUPS', '30'),
         );
 
+        $io = new SymfonyStyle($input, $output);
+
         try {
+            $io->writeln('Dumping MariaDB database...');
             $mariaDbDump->dump();
-            $awsProvider->upload($backupFilePath);
+
+            $io->writeln('Uploading backup to S3...');
+            $key = $awsProvider->upload($backupFilePath);
         } finally {
             // Always remove the local dump, even if the dump or upload failed, so the
             // sensitive backup is never left behind in the temp directory.
             $mariaDbDump->clean();
         }
+
+        $io->success(sprintf('Backup uploaded to %s', $key));
 
         return self::SUCCESS;
     }
