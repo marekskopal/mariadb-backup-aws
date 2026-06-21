@@ -45,6 +45,7 @@ final readonly class AwsProvider
             'Bucket' => $this->awsBucket,
             'Key' => $targetPath,
             'SourceFile' => $backupFileName,
+            'ServerSideEncryption' => 'AES256',
         ]);
 
         $this->checkMaxBackups();
