@@ -64,7 +64,13 @@ final readonly class MariaDbDump
             throw new \RuntimeException('Failed to start mariadb-dump process');
         }
 
+        // Restrict the backup file to the owner before any data is written: it holds a
+        // full database dump and lives in a shared temp directory. Setting the umask
+        // around gzopen() guarantees 0600 at creation time, avoiding a world-readable
+        // window that a create-then-chmod would leave open.
+        $previousUmask = umask(0o077);
         $gzip = gzopen($this->backupFilePath, 'wb9');
+        umask($previousUmask);
         if ($gzip === false) {
             fclose($pipes[1]);
             proc_close($process);
