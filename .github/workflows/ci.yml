@@ -48,4 +48,40 @@ jobs:
           php-version: ${{ matrix.php }}
           coverage: none
       - run: composer install --no-progress
-      - run: vendor/bin/phpunit
+      - run: vendor/bin/phpunit --testsuite default
+
+  integration:
+    name: Integration (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.4', '8.5']
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      MARIADB_TEST_HOST: 127.0.0.1
+      MARIADB_TEST_PORT: 3306
+      MARIADB_TEST_USER: root
+      MARIADB_TEST_PASSWORD: root
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli
+          coverage: none
+      - name: Install MariaDB client (provides mariadb-dump)
+        run: sudo apt-get update && sudo apt-get install -y mariadb-client
+      - run: composer install --no-progress
+      - run: vendor/bin/phpunit --testsuite integration
