@@ -55,8 +55,6 @@ final class MariaDbBackupAwsCommand extends Command
             mariaDbDatabase: $this->getOptionOrEnv($input, self::OptionDatabase, 'DB_DATABASE'),
             backupFilePath: $backupFilePath,
         );
-        $mariaDbDump->dump();
-
         $awsProvider = new AwsProvider(
             awsKey: $this->getOptionOrEnv($input, self::OptionAwsAccessKey, 'AWS_ACCESS_KEY'),
             awsSecret: $this->getOptionOrEnv($input, self::OptionAwsSecretAccessKey, 'AWS_SECRET_ACCESS_KEY'),
@@ -65,9 +63,15 @@ final class MariaDbBackupAwsCommand extends Command
             rootPath: $this->getOptionOrEnv($input, self::OptionAwsRootPath, 'AWS_ROOT_PATH', 'backup'),
             maxBackups: (int) $this->getOptionOrEnv($input, self::OptionAwsMaxBackups, 'AWS_MAX_BACKUPS', '30'),
         );
-        $awsProvider->upload($backupFilePath);
 
-        $mariaDbDump->clean();
+        try {
+            $mariaDbDump->dump();
+            $awsProvider->upload($backupFilePath);
+        } finally {
+            // Always remove the local dump, even if the dump or upload failed, so the
+            // sensitive backup is never left behind in the temp directory.
+            $mariaDbDump->clean();
+        }
 
         return self::SUCCESS;
     }

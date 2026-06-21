@@ -32,6 +32,10 @@ final readonly class MariaDbDump
 
     public function clean(): void
     {
+        if (!file_exists($this->backupFilePath)) {
+            return;
+        }
+
         if (!unlink($this->backupFilePath)) {
             throw new \RuntimeException(sprintf('Failed to delete temporary backup file: %s', $this->backupFilePath));
         }
