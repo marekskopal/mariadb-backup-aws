@@ -24,4 +24,20 @@ final class MariaDbDumpTest extends TestCase
         );
         unset($dump);
     }
+
+    public function testCreateDumpCommand(): void
+    {
+        $dump = new MariaDbDump(
+            mariaDbHost: 'db.example.com',
+            mariaDbUser: 'backup',
+            mariaDbPassword: 's3cr3t',
+            mariaDbDatabase: 'app',
+            backupFilePath: '/tmp/test.sql.gz',
+        );
+
+        self::assertSame(
+            ['mariadb-dump', '-h', 'db.example.com', '-u', 'backup', '-ps3cr3t', 'app'],
+            $dump->createDumpCommand(),
+        );
+    }
 }
