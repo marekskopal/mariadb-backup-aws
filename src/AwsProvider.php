@@ -21,6 +21,15 @@ final readonly class AwsProvider
         private string $rootPath,
         private int $maxBackups,
     ) {
+        // Guard against a misconfigured limit: with maxBackups <= 0, checkMaxBackups()
+        // would treat every object as surplus and delete all backups, including the one
+        // just uploaded.
+        if ($this->maxBackups < 1) {
+            throw new \InvalidArgumentException(
+                sprintf('Max backups must be at least 1, %d given', $this->maxBackups),
+            );
+        }
+
         $this->s3Client = new S3Client([
             'version' => 'latest',
             'region' => $awsRegion,

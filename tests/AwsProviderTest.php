@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MarekSkopal\MariaDbBackup\Tests;
 
 use DateTimeImmutable;
+use InvalidArgumentException;
 use MarekSkopal\MariaDbBackup\AwsProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -12,6 +13,20 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(AwsProvider::class)]
 final class AwsProviderTest extends TestCase
 {
+    public function testConstructRejectsNonPositiveMaxBackups(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        new AwsProvider(
+            awsKey: 'key',
+            awsSecret: 'secret',
+            awsRegion: 'eu-central-1',
+            awsBucket: 'bucket',
+            rootPath: 'backup',
+            maxBackups: 0,
+        );
+    }
+
     public function testSelectObjectsToDeleteKeepsAllWhenWithinLimit(): void
     {
         $contents = [
