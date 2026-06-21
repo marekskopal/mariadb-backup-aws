@@ -83,12 +83,12 @@ final class MariaDbBackupAwsCommand extends Command
     {
         /** @var string|null $option */
         $option = $input->getOption($optionName);
-        if ($option !== null) {
+        if ($option !== null && $option !== '') {
             return $option;
         }
 
         $env = getenv($envName);
-        if ($env !== false) {
+        if ($env !== false && $env !== '') {
             return $env;
         }
 
