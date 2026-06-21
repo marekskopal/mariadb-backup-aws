@@ -19,6 +19,7 @@ final class MariaDbBackupAwsCommand extends Command
     private const string OptionUser = 'user';
     private const string OptionPassword = 'password';
     private const string OptionDatabase = 'database';
+    private const string OptionDumpOptions = 'dump-options';
 
     private const string OptionAwsAccessKey = 'aws-access-key';
     private const string OptionAwsSecretAccessKey = 'aws-secret';
@@ -43,6 +44,12 @@ final class MariaDbBackupAwsCommand extends Command
             InputOption::VALUE_REQUIRED,
             'MariaDB database (comma-separated for several; all databases if omitted)',
         );
+        $this->addOption(
+            self::OptionDumpOptions,
+            null,
+            InputOption::VALUE_REQUIRED,
+            'Extra mariadb-dump options, space-separated (appended to the defaults)',
+        );
 
         $this->addOption(self::OptionAwsAccessKey, 'a', InputOption::VALUE_REQUIRED, 'AWS access key');
         $this->addOption(self::OptionAwsSecretAccessKey, 's', InputOption::VALUE_REQUIRED, 'AWS secret access key');
@@ -66,6 +73,9 @@ final class MariaDbBackupAwsCommand extends Command
             mariaDbPassword: $this->getOptionOrEnv($input, self::OptionPassword, 'DB_PASSWORD'),
             mariaDbDatabase: $this->getOptionOrEnv($input, self::OptionDatabase, 'DB_DATABASE', ''),
             backupFilePath: $backupFilePath,
+            extraDumpOptions: $this->splitArguments(
+                $this->getOptionOrEnv($input, self::OptionDumpOptions, 'DB_DUMP_OPTIONS', ''),
+            ),
         );
         $awsProvider = new AwsProvider(
             awsKey: $this->getOptionOrEnv($input, self::OptionAwsAccessKey, 'AWS_ACCESS_KEY'),
@@ -113,5 +123,23 @@ final class MariaDbBackupAwsCommand extends Command
         }
 
         throw new \InvalidArgumentException(sprintf('Option %s or environment variable %s must be set', $optionName, $envName));
+    }
+
+    /**
+     * Splits a space-separated argument string into individual tokens.
+     *
+     * @return list<string>
+     */
+    private function splitArguments(string $value): array
+    {
+        $parts = preg_split('/\s+/', trim($value));
+        if ($parts === false) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $parts,
+            static fn(string $argument): bool => $argument !== '',
+        ));
     }
 }

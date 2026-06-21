@@ -10,6 +10,21 @@ final readonly class MariaDbDump
 {
     private const int ChunkSize = 65536;
 
+    /**
+     * Produce a consistent, complete dump by default: --single-transaction takes a
+     * non-locking transactional snapshot (so a live InnoDB database is not stalled and
+     * is dumped at a single point in time), and --routines/--events/--triggers include
+     * stored procedures, scheduled events and triggers that are otherwise omitted.
+     * These require the backup user to have the corresponding privileges.
+     */
+    private const array DefaultDumpOptions = [
+        '--single-transaction',
+        '--routines',
+        '--events',
+        '--triggers',
+    ];
+
+    /** @param list<string> $extraDumpOptions */
     public function __construct(
         private string $mariaDbHost,
         private int $mariaDbPort,
@@ -17,6 +32,7 @@ final readonly class MariaDbDump
         #[SensitiveParameter] private string $mariaDbPassword,
         private string $mariaDbDatabase,
         private string $backupFilePath,
+        private array $extraDumpOptions = [],
     ) {
     }
 
@@ -155,6 +171,10 @@ final readonly class MariaDbDump
             'mariadb-dump',
             '--defaults-extra-file=' . $defaultsFile,
         ];
+
+        foreach ([...self::DefaultDumpOptions, ...$this->extraDumpOptions] as $option) {
+            $command[] = $option;
+        }
 
         $databases = self::parseDatabases($this->mariaDbDatabase);
 

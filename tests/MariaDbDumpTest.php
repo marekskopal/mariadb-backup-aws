@@ -24,7 +24,15 @@ final class MariaDbDumpTest extends TestCase
         $dump = $this->createDump('app');
 
         self::assertSame(
-            ['mariadb-dump', '--defaults-extra-file=/tmp/my.cnf', 'app'],
+            [
+                'mariadb-dump',
+                '--defaults-extra-file=/tmp/my.cnf',
+                '--single-transaction',
+                '--routines',
+                '--events',
+                '--triggers',
+                'app',
+            ],
             $dump->createDumpCommand('/tmp/my.cnf'),
         );
     }
@@ -34,7 +42,18 @@ final class MariaDbDumpTest extends TestCase
         $dump = $this->createDump('app, reporting ,logs');
 
         self::assertSame(
-            ['mariadb-dump', '--defaults-extra-file=/tmp/my.cnf', '--databases', 'app', 'reporting', 'logs'],
+            [
+                'mariadb-dump',
+                '--defaults-extra-file=/tmp/my.cnf',
+                '--single-transaction',
+                '--routines',
+                '--events',
+                '--triggers',
+                '--databases',
+                'app',
+                'reporting',
+                'logs',
+            ],
             $dump->createDumpCommand('/tmp/my.cnf'),
         );
     }
@@ -44,7 +63,43 @@ final class MariaDbDumpTest extends TestCase
         $dump = $this->createDump('');
 
         self::assertSame(
-            ['mariadb-dump', '--defaults-extra-file=/tmp/my.cnf', '--all-databases'],
+            [
+                'mariadb-dump',
+                '--defaults-extra-file=/tmp/my.cnf',
+                '--single-transaction',
+                '--routines',
+                '--events',
+                '--triggers',
+                '--all-databases',
+            ],
+            $dump->createDumpCommand('/tmp/my.cnf'),
+        );
+    }
+
+    public function testCreateDumpCommandAppendsExtraOptions(): void
+    {
+        $dump = new MariaDbDump(
+            mariaDbHost: 'db.example.com',
+            mariaDbPort: 3306,
+            mariaDbUser: 'backup',
+            mariaDbPassword: 's3cr3t',
+            mariaDbDatabase: 'app',
+            backupFilePath: '/tmp/test.sql.gz',
+            extraDumpOptions: ['--no-data', '--skip-lock-tables'],
+        );
+
+        self::assertSame(
+            [
+                'mariadb-dump',
+                '--defaults-extra-file=/tmp/my.cnf',
+                '--single-transaction',
+                '--routines',
+                '--events',
+                '--triggers',
+                '--no-data',
+                '--skip-lock-tables',
+                'app',
+            ],
             $dump->createDumpCommand('/tmp/my.cnf'),
         );
     }
