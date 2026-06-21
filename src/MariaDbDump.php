@@ -83,12 +83,14 @@ final readonly class MariaDbDump
             throw new \RuntimeException(sprintf('Failed to open backup file for writing: %s', $this->backupFilePath));
         }
 
+        $bytesWritten = 0;
         while (!feof($pipes[1])) {
             $chunk = fread($pipes[1], self::ChunkSize);
             if ($chunk === false) {
                 break;
             }
 
+            $bytesWritten += strlen($chunk);
             gzwrite($gzip, $chunk);
         }
 
@@ -104,6 +106,12 @@ final readonly class MariaDbDump
             throw new \RuntimeException(
                 sprintf('MariaDB dump failed with exit code %d: %s', $returnCode, trim($stderr)),
             );
+        }
+
+        // mariadb-dump always emits at least a header, so zero bytes on a clean exit
+        // signals a silently empty dump that we must not treat as a valid backup.
+        if ($bytesWritten === 0) {
+            throw new \RuntimeException('MariaDB dump produced no output');
         }
     }
 
