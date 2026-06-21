@@ -149,11 +149,40 @@ final readonly class MariaDbDump
     /** @return list<string> */
     public function createDumpCommand(string $defaultsFile): array
     {
-        return [
+        $command = [
             'mariadb-dump',
             '--defaults-extra-file=' . $defaultsFile,
-            $this->mariaDbDatabase,
         ];
+
+        $databases = self::parseDatabases($this->mariaDbDatabase);
+
+        if ($databases === []) {
+            $command[] = '--all-databases';
+        } elseif (count($databases) === 1) {
+            $command[] = $databases[0];
+        } else {
+            $command[] = '--databases';
+            foreach ($databases as $database) {
+                $command[] = $database;
+            }
+        }
+
+        return $command;
+    }
+
+    /**
+     * Splits a comma-separated database list into individual names. An empty value means
+     * "all databases".
+     *
+     * @return list<string>
+     * @api Exposed for unit testing of the command builder.
+     */
+    public static function parseDatabases(string $databases): array
+    {
+        return array_values(array_filter(
+            array_map(trim(...), explode(',', $databases)),
+            fn(string $database): bool => $database !== '',
+        ));
     }
 
     /**

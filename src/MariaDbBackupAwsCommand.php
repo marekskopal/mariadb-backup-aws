@@ -34,7 +34,12 @@ final class MariaDbBackupAwsCommand extends Command
         $this->addOption(self::OptionHost, 'H', InputOption::VALUE_REQUIRED, 'MariaDB host');
         $this->addOption(self::OptionUser, 'u', InputOption::VALUE_REQUIRED, 'MariaDB user');
         $this->addOption(self::OptionPassword, 'p', InputOption::VALUE_REQUIRED, 'MariaDB password');
-        $this->addOption(self::OptionDatabase, 'd', InputOption::VALUE_REQUIRED, 'MariaDB database');
+        $this->addOption(
+            self::OptionDatabase,
+            'd',
+            InputOption::VALUE_REQUIRED,
+            'MariaDB database (comma-separated for several; all databases if omitted)',
+        );
 
         $this->addOption(self::OptionAwsAccessKey, 'a', InputOption::VALUE_REQUIRED, 'AWS access key');
         $this->addOption(self::OptionAwsSecretAccessKey, 's', InputOption::VALUE_REQUIRED, 'AWS secret access key');
@@ -55,7 +60,7 @@ final class MariaDbBackupAwsCommand extends Command
             mariaDbHost: $this->getOptionOrEnv($input, self::OptionHost, 'DB_HOST'),
             mariaDbUser: $this->getOptionOrEnv($input, self::OptionUser, 'DB_USER'),
             mariaDbPassword: $this->getOptionOrEnv($input, self::OptionPassword, 'DB_PASSWORD'),
-            mariaDbDatabase: $this->getOptionOrEnv($input, self::OptionDatabase, 'DB_DATABASE'),
+            mariaDbDatabase: $this->getOptionOrEnv($input, self::OptionDatabase, 'DB_DATABASE', ''),
             backupFilePath: $backupFilePath,
         );
         $awsProvider = new AwsProvider(

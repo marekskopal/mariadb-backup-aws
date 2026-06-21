@@ -25,19 +25,44 @@ final class MariaDbDumpTest extends TestCase
         unset($dump);
     }
 
-    public function testCreateDumpCommand(): void
+    public function testCreateDumpCommandWithSingleDatabase(): void
     {
-        $dump = new MariaDbDump(
-            mariaDbHost: 'db.example.com',
-            mariaDbUser: 'backup',
-            mariaDbPassword: 's3cr3t',
-            mariaDbDatabase: 'app',
-            backupFilePath: '/tmp/test.sql.gz',
-        );
+        $dump = $this->createDump('app');
 
         self::assertSame(
             ['mariadb-dump', '--defaults-extra-file=/tmp/my.cnf', 'app'],
             $dump->createDumpCommand('/tmp/my.cnf'),
+        );
+    }
+
+    public function testCreateDumpCommandWithMultipleDatabases(): void
+    {
+        $dump = $this->createDump('app, reporting ,logs');
+
+        self::assertSame(
+            ['mariadb-dump', '--defaults-extra-file=/tmp/my.cnf', '--databases', 'app', 'reporting', 'logs'],
+            $dump->createDumpCommand('/tmp/my.cnf'),
+        );
+    }
+
+    public function testCreateDumpCommandWithoutDatabaseDumpsAll(): void
+    {
+        $dump = $this->createDump('');
+
+        self::assertSame(
+            ['mariadb-dump', '--defaults-extra-file=/tmp/my.cnf', '--all-databases'],
+            $dump->createDumpCommand('/tmp/my.cnf'),
+        );
+    }
+
+    private function createDump(string $database): MariaDbDump
+    {
+        return new MariaDbDump(
+            mariaDbHost: 'db.example.com',
+            mariaDbUser: 'backup',
+            mariaDbPassword: 's3cr3t',
+            mariaDbDatabase: $database,
+            backupFilePath: '/tmp/test.sql.gz',
         );
     }
 
