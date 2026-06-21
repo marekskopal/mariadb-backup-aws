@@ -6,6 +6,7 @@ namespace MarekSkopal\MariaDbBackup;
 
 use Aws\S3\S3Client;
 use DateTimeImmutable;
+use DateTimeInterface;
 use SensitiveParameter;
 
 final readonly class AwsProvider
@@ -53,26 +54,49 @@ final readonly class AwsProvider
 
     private function checkMaxBackups(): void
     {
-        $result = $this->s3Client->listObjectsV2([
+        // ListObjectsV2 returns at most 1000 keys per response; iterate the paginator so
+        // rotation counts every backup, not just the first page.
+        $paginator = $this->s3Client->getPaginator('ListObjectsV2', [
             'Bucket' => $this->awsBucket,
             'Prefix' => trim($this->rootPath, '/') . '/',
         ]);
 
-        /** @var list<array{Key: string, LastModified: DateTimeImmutable}> $contents */
-        $contents = $result['Contents'] ?? [];
+        $contents = [];
+        foreach ($paginator as $result) {
+            /** @var list<array{Key: string, LastModified: DateTimeInterface}> $pageContents */
+            $pageContents = $result['Contents'] ?? [];
+            foreach ($pageContents as $object) {
+                $contents[] = $object;
+            }
+        }
+
+        foreach (self::selectObjectsToDelete($contents, $this->maxBackups) as $key) {
+            $this->s3Client->deleteObject([
+                'Bucket' => $this->awsBucket,
+                'Key' => $key,
+            ]);
+        }
+    }
+
+    /**
+     * Returns the keys of the oldest objects that exceed the retention limit.
+     *
+     * @param list<array{Key: string, LastModified: DateTimeInterface}> $contents
+     * @return list<string>
+     * @api Exposed for unit testing of the rotation logic.
+     */
+    public static function selectObjectsToDelete(array $contents, int $maxBackups): array
+    {
         $objectsCount = count($contents);
-        if ($objectsCount <= $this->maxBackups) {
-            return;
+        if ($objectsCount <= $maxBackups) {
+            return [];
         }
 
         usort($contents, fn(array $a, array $b): int => $a['LastModified'] <=> $b['LastModified']);
 
-        $toDelete = array_slice($contents, 0, $objectsCount - $this->maxBackups);
-        foreach ($toDelete as $object) {
-            $this->s3Client->deleteObject([
-                'Bucket' => $this->awsBucket,
-                'Key' => $object['Key'],
-            ]);
-        }
+        return array_map(
+            fn(array $object): string => $object['Key'],
+            array_slice($contents, 0, $objectsCount - $maxBackups),
+        );
     }
 }
