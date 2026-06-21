@@ -21,7 +21,13 @@ final readonly class MariaDbDump
 
     public function dump(): void
     {
-        $this->runDump($this->createDumpCommand());
+        $defaultsFile = $this->createDefaultsFile();
+
+        try {
+            $this->runDump($this->createDumpCommand($defaultsFile));
+        } finally {
+            @unlink($defaultsFile);
+        }
     }
 
     public function clean(): void
@@ -91,17 +97,54 @@ final readonly class MariaDbDump
         }
     }
 
+    /**
+     * Writes connection credentials to a temporary option file instead of passing them
+     * as command-line arguments, where they would be visible to any local user via the
+     * process list (e.g. `ps aux`).
+     */
+    private function createDefaultsFile(): string
+    {
+        $defaultsFile = tempnam(sys_get_temp_dir(), 'mariadb-dump-cnf-');
+        if ($defaultsFile === false) {
+            throw new \RuntimeException('Failed to create temporary credentials file');
+        }
+
+        if (file_put_contents($defaultsFile, $this->createDefaultsFileContent()) === false) {
+            @unlink($defaultsFile);
+
+            throw new \RuntimeException('Failed to write temporary credentials file');
+        }
+
+        return $defaultsFile;
+    }
+
+    public function createDefaultsFileContent(): string
+    {
+        return sprintf(
+            "[client]\nhost=%s\nuser=%s\npassword=%s\n",
+            $this->quote($this->mariaDbHost),
+            $this->quote($this->mariaDbUser),
+            $this->quote($this->mariaDbPassword),
+        );
+    }
+
     /** @return list<string> */
-    public function createDumpCommand(): array
+    public function createDumpCommand(string $defaultsFile): array
     {
         return [
             'mariadb-dump',
-            '-h',
-            $this->mariaDbHost,
-            '-u',
-            $this->mariaDbUser,
-            '-p' . $this->mariaDbPassword,
+            '--defaults-extra-file=' . $defaultsFile,
             $this->mariaDbDatabase,
         ];
+    }
+
+    /**
+     * Quotes a value for a MariaDB option file: wrap in double quotes and escape
+     * backslashes and double quotes so values with spaces or special characters
+     * (e.g. `#`, which would otherwise start a comment) are read verbatim.
+     */
+    private function quote(string $value): string
+    {
+        return '"' . str_replace(['\\', '"'], ['\\\\', '\\"'], $value) . '"';
     }
 }

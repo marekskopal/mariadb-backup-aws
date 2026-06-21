@@ -36,8 +36,37 @@ final class MariaDbDumpTest extends TestCase
         );
 
         self::assertSame(
-            ['mariadb-dump', '-h', 'db.example.com', '-u', 'backup', '-ps3cr3t', 'app'],
-            $dump->createDumpCommand(),
+            ['mariadb-dump', '--defaults-extra-file=/tmp/my.cnf', 'app'],
+            $dump->createDumpCommand('/tmp/my.cnf'),
         );
+    }
+
+    public function testCreateDefaultsFileContentDoesNotLeakCredentialsToArgv(): void
+    {
+        $dump = new MariaDbDump(
+            mariaDbHost: 'db.example.com',
+            mariaDbUser: 'backup',
+            mariaDbPassword: 's3cr3t',
+            mariaDbDatabase: 'app',
+            backupFilePath: '/tmp/test.sql.gz',
+        );
+
+        self::assertSame(
+            "[client]\nhost=\"db.example.com\"\nuser=\"backup\"\npassword=\"s3cr3t\"\n",
+            $dump->createDefaultsFileContent(),
+        );
+    }
+
+    public function testCreateDefaultsFileContentEscapesSpecialCharacters(): void
+    {
+        $dump = new MariaDbDump(
+            mariaDbHost: 'localhost',
+            mariaDbUser: 'backup',
+            mariaDbPassword: 'pa"ss#wo\\rd',
+            mariaDbDatabase: 'app',
+            backupFilePath: '/tmp/test.sql.gz',
+        );
+
+        self::assertStringContainsString('password="pa\\"ss#wo\\\\rd"', $dump->createDefaultsFileContent());
     }
 }
