@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--aws-endpoint` / `AWS_ENDPOINT` for S3-compatible storage (MinIO, LocalStack, Ceph); a custom endpoint switches on path-style addressing
 - CI job that runs the entrypoint from the built Docker image, and the same smoke test in the release workflow before the image is pushed
 
+### Changed
+- Updated Composer dependencies to their latest versions (aws/aws-sdk-php 3.394.11, symfony/console 8.1.6, PHPUnit 13.3.3, PHPStan 2.2.13, Slevomat Coding Standard 8.31.1)
+- Updated Docker base images to their latest versions (composer 2.10.3, php 8.5.10-cli-alpine) and MinIO in the test environment to RELEASE.2025-09-07T16-13-09Z
+
 ## [1.0.0] - 2026-06-21
 
 First stable release, hardening the backup workflow for production use.

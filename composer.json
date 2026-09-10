@@ -18,18 +18,18 @@
     ],
     "require": {
         "php": ">=8.4",
-        "aws/aws-sdk-php": "^3.385.3",
-        "symfony/console": "^8.1"
+        "aws/aws-sdk-php": "^3.394.11",
+        "symfony/console": "^8.1.6"
     },
     "require-dev": {
         "phpstan/extension-installer": "^1.4",
-        "phpstan/phpstan": "^2.2.2",
-        "phpstan/phpstan-deprecation-rules": "^2.0",
-        "phpstan/phpstan-phpunit": "^2.0",
-        "phpstan/phpstan-strict-rules": "^2.0.11",
-        "phpunit/phpunit": "^13.2.1",
+        "phpstan/phpstan": "^2.2.13",
+        "phpstan/phpstan-deprecation-rules": "^2.0.5",
+        "phpstan/phpstan-phpunit": "^2.0.18",
+        "phpstan/phpstan-strict-rules": "^2.0.12",
+        "phpunit/phpunit": "^13.3.3",
         "shipmonk/phpstan-rules": "^4.4",
-        "slevomat/coding-standard": "^8.29",
+        "slevomat/coding-standard": "^8.31.1",
         "spatie/ray": "^1.48",
         "tomasvotruba/cognitive-complexity": "^1.2",
         "tomasvotruba/unused-public": "^2.2.1"
