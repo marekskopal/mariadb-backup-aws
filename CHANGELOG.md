@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`bin/console` no longer fatals on every invocation.** The entrypoint called `Application::add()`, which symfony/console 8 removed in favour of `addCommand()`, so v0.3.1 and v1.0.0 (Composer package and Docker image alike) died with `PHP Fatal error: Call to undefined method Symfony\Component\Console\Application::add()` before any backup ran. No test executed the binary, so the suite stayed green.
+
+### Added
+- `tests/ConsoleEntrypointTest.php` runs the real `bin/console` in a subprocess, so an entrypoint incompatible with the installed symfony/console fails the build
+- End-to-end test suite exercising the published binary against a live MariaDB and MinIO (an S3-compatible stand-in for AWS S3): asserts the uploaded object is restorable gzip containing the seeded data, that the reported key matches the stored object, that AES-256 encryption is applied, that rotation deletes only the oldest surplus backups, and that a failed dump uploads nothing at all
+- `docker-compose.test.yml` and `.env.test`, a ready-made MariaDB + MinIO environment for that suite, used unchanged by CI
+- `--aws-endpoint` / `AWS_ENDPOINT` for S3-compatible storage (MinIO, LocalStack, Ceph); a custom endpoint switches on path-style addressing
+- CI job that runs the entrypoint from the built Docker image, and the same smoke test in the release workflow before the image is pushed
+
 ## [1.0.0] - 2026-06-21
 
 First stable release, hardening the backup workflow for production use.

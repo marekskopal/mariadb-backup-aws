@@ -26,6 +26,7 @@ final class MariaDbBackupAwsCommand extends Command
     private const string OptionAwsRegion = 'aws-region';
     private const string OptionAwsBucket = 'aws-bucket';
     private const string OptionAwsRootPath = 'aws-root-path';
+    private const string OptionAwsEndpoint = 'aws-endpoint';
     private const string OptionAwsMaxBackups = 'aws-max-backups';
 
     protected function configure(): void
@@ -57,6 +58,12 @@ final class MariaDbBackupAwsCommand extends Command
         $this->addOption(self::OptionAwsBucket, 'b', InputOption::VALUE_REQUIRED, 'AWS bucket name');
         $this->addOption(self::OptionAwsRootPath, 'o', InputOption::VALUE_REQUIRED, 'AWS root path');
         $this->addOption(self::OptionAwsMaxBackups, 'm', InputOption::VALUE_REQUIRED, 'AWS max. backups');
+        $this->addOption(
+            self::OptionAwsEndpoint,
+            'e',
+            InputOption::VALUE_REQUIRED,
+            'Custom S3 endpoint for an S3-compatible server (e.g. MinIO); omit for real AWS',
+        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -84,6 +91,7 @@ final class MariaDbBackupAwsCommand extends Command
             awsBucket: $this->getOptionOrEnv($input, self::OptionAwsBucket, 'AWS_BUCKET'),
             rootPath: $this->getOptionOrEnv($input, self::OptionAwsRootPath, 'AWS_ROOT_PATH', 'backup'),
             maxBackups: (int) $this->getOptionOrEnv($input, self::OptionAwsMaxBackups, 'AWS_MAX_BACKUPS', '30'),
+            awsEndpoint: $this->getOptionOrEnvOrNull($input, self::OptionAwsEndpoint, 'AWS_ENDPOINT'),
         );
 
         $io = new SymfonyStyle($input, $output);
@@ -103,6 +111,14 @@ final class MariaDbBackupAwsCommand extends Command
         $io->success(sprintf('Backup uploaded to %s', $key));
 
         return self::SUCCESS;
+    }
+
+    /** Returns the configured value, or null when neither the option nor the environment variable is set. */
+    private function getOptionOrEnvOrNull(InputInterface $input, string $optionName, string $envName): ?string
+    {
+        $value = $this->getOptionOrEnv($input, $optionName, $envName, '');
+
+        return $value !== '' ? $value : null;
     }
 
     private function getOptionOrEnv(InputInterface $input, string $optionName, string $envName, ?string $default = null): string

@@ -50,30 +50,13 @@ jobs:
       - run: composer install --no-progress
       - run: vendor/bin/phpunit --testsuite default
 
-  integration:
-    name: Integration (PHP ${{ matrix.php }})
+  end-to-end:
+    name: End-to-end (MariaDB + MinIO, PHP ${{ matrix.php }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php: ['8.4', '8.5']
-    services:
-      mariadb:
-        image: mariadb:11
-        env:
-          MARIADB_ROOT_PASSWORD: root
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=20
-    env:
-      MARIADB_TEST_HOST: 127.0.0.1
-      MARIADB_TEST_PORT: 3306
-      MARIADB_TEST_USER: root
-      MARIADB_TEST_PASSWORD: root
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -84,4 +67,41 @@ jobs:
       - name: Install MariaDB client (provides mariadb-dump)
         run: sudo apt-get update && sudo apt-get install -y mariadb-client
       - run: composer install --no-progress
-      - run: vendor/bin/phpunit --testsuite integration
+      # The same Compose stack developers run locally: MariaDB plus MinIO, an
+      # S3-compatible server standing in for AWS S3, so the upload and rotation paths are
+      # exercised for real without an AWS account. Compose is used instead of job
+      # services because the MinIO image needs a `server /data` command, which service
+      # containers cannot override.
+      - name: Start MariaDB and MinIO
+        run: docker compose -f docker-compose.test.yml up -d --wait
+      - name: Run end-to-end tests
+        run: |
+          set -a && . ./.env.test && set +a
+          vendor/bin/phpunit --testsuite integration
+      - name: Stack logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.test.yml logs
+      - name: Stop stack
+        if: always()
+        run: docker compose -f docker-compose.test.yml down -v
+
+  docker-smoke:
+    name: Docker image smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          load: true
+          tags: mariadb-backup-aws:ci
+      # The image installs its dependencies at build time (composer.lock is not
+      # committed), so only running the entrypoint from the built image proves the
+      # published artifact works against the versions it actually resolved. v1.0.0
+      # shipped an image that died with a PHP fatal error on every invocation.
+      - name: Entrypoint runs in the image
+        run: |
+          docker run --rm --entrypoint php mariadb-backup-aws:ci /app/bin/console mariaDbBackup:aws --help

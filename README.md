@@ -18,6 +18,7 @@ A small, dependable CLI tool that dumps one or more MariaDB databases, compresse
 - **Automatic rotation** — keeps the newest *N* backups and deletes the rest (paginated, so it scales past 1000 objects).
 - **Flexible scope** — back up a single database, a comma-separated list, or all databases.
 - **Configurable two ways** — every setting can be provided as a CLI option or an environment variable.
+- **Works with S3-compatible storage** — point `--aws-endpoint` at MinIO, LocalStack or Ceph instead of AWS.
 
 ## Requirements
 
@@ -58,6 +59,7 @@ Each option can be set via a CLI flag or an environment variable. CLI options ta
 | `--aws-bucket`        | `-b`  | `AWS_BUCKET`             | yes      | —        | S3 bucket name                                                     |
 | `--aws-root-path`     | `-o`  | `AWS_ROOT_PATH`          | no       | `backup` | Key prefix for backups within the bucket                           |
 | `--aws-max-backups`   | `-m`  | `AWS_MAX_BACKUPS`        | no       | `30`     | Number of backups to retain (must be ≥ 1)                          |
+| `--aws-endpoint`      | `-e`  | `AWS_ENDPOINT`           | no       | *(AWS)*  | Custom endpoint for an S3-compatible server (MinIO, LocalStack, Ceph) |
 
 Backups are stored under:
 
@@ -139,15 +141,56 @@ Omit `--database` to back up all databases, or pass a comma-separated list (e.g.
 4. Objects under the prefix are listed and the oldest beyond `AWS_MAX_BACKUPS` are deleted.
 5. The local temporary file is removed — even if the dump or upload fails.
 
+## Verifying your backups
+
+A backup is only real if you have looked at it. To list what is actually in the bucket
+with sizes — a suspiciously small object (a few hundred bytes) is an empty dump, not a
+backup:
+
+```bash
+aws s3 ls --recursive --human-readable s3://your_aws_bucket/backup/
+```
+
+And to confirm the newest one restores:
+
+```bash
+aws s3 cp s3://your_aws_bucket/backup/2026-01-01/2026-01-01_01-00-00_ab12cd34.sql.gz - \
+  | gunzip | head -40
+```
+
 ## Development
 
 ```bash
 composer install
 
-vendor/bin/phpunit      # tests
-vendor/bin/phpstan analyse   # static analysis (level 9)
-vendor/bin/phpcs        # coding standard
+vendor/bin/phpunit --testsuite default   # unit tests and the console entrypoint test
+vendor/bin/phpstan analyse               # static analysis (level 9)
+vendor/bin/phpcs                         # coding standard
 ```
+
+### End-to-end tests against a simulated AWS
+
+The integration suite runs the whole workflow — `bin/console` → `mariadb-dump` → gzip →
+upload → rotation — against a real MariaDB and MinIO, an S3-compatible server that stands
+in for AWS S3, so no AWS account is involved:
+
+```bash
+docker compose -f docker-compose.test.yml up -d --wait
+
+set -a && . ./.env.test && set +a
+vendor/bin/phpunit --testsuite integration
+
+docker compose -f docker-compose.test.yml down -v
+```
+
+The suite skips itself when the `MARIADB_TEST_*` / `S3_TEST_*` variables are not set, so
+the default run stays self-contained. MinIO is started with a KMS key so it honours the
+same AES-256 server-side encryption header the uploader sends to AWS.
+
+It asserts what a nightly cron run depends on: the entrypoint starts, the uploaded object
+is a valid gzip containing the seeded schema and data, the reported key matches the stored
+object, encryption is applied, rotation deletes only the oldest backups beyond the limit,
+and **a failed dump uploads nothing at all**.
 
 ## License
 

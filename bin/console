@@ -10,6 +10,7 @@ use Symfony\Component\Console\Application;
 
 $application = new Application();
 
-$application->add(new MariaDbBackupAwsCommand());
+// Symfony Console 8 removed Application::add(); addCommand() is the replacement.
+$application->addCommand(new MariaDbBackupAwsCommand());
 
 $application->run();

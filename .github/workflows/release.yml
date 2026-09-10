@@ -36,6 +36,27 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Dependencies are installed at image build time (composer.lock is not committed),
+      # so the only way to know the published image works is to run its entrypoint from
+      # the built image before pushing. v1.0.0 was published with an entrypoint that died
+      # with a PHP fatal error on every invocation.
+      - name: Build for smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: mariadb-backup-aws:smoke
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test the entrypoint
+        run: |
+          docker run --rm --entrypoint php mariadb-backup-aws:smoke /app/bin/console list \
+            | grep -q 'mariaDbBackup:aws'
+          docker run --rm --entrypoint php mariadb-backup-aws:smoke /app/bin/console mariaDbBackup:aws --help
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:

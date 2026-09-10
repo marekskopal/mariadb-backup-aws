@@ -13,6 +13,10 @@ final readonly class AwsProvider
 {
     private S3Client $s3Client;
 
+    /**
+     * @param string|null $awsEndpoint Custom S3 endpoint for an S3-compatible server
+     *                                 (MinIO, LocalStack, Ceph); null targets real AWS.
+     */
     public function __construct(
         #[SensitiveParameter] string $awsKey,
         #[SensitiveParameter] string $awsSecret,
@@ -20,6 +24,7 @@ final readonly class AwsProvider
         private string $awsBucket,
         private string $rootPath,
         private int $maxBackups,
+        ?string $awsEndpoint = null,
     ) {
         // Guard against a misconfigured limit: with maxBackups <= 0, checkMaxBackups()
         // would treat every object as surplus and delete all backups, including the one
@@ -30,14 +35,44 @@ final readonly class AwsProvider
             );
         }
 
-        $this->s3Client = new S3Client([
+        $this->s3Client = new S3Client(self::createClientConfig($awsKey, $awsSecret, $awsRegion, $awsEndpoint));
+    }
+
+    /**
+     * Builds the S3 client configuration. A custom endpoint also switches on path-style
+     * addressing, because S3-compatible servers are reached by host or IP and cannot
+     * serve the virtual-hosted `{bucket}.{host}` style that AWS uses.
+     *
+     * @return array{
+     *     version: string,
+     *     region: string,
+     *     credentials: array{key: string, secret: string},
+     *     endpoint?: string,
+     *     use_path_style_endpoint?: bool,
+     * }
+     * @api Exposed for unit testing of the client configuration.
+     */
+    public static function createClientConfig(
+        #[SensitiveParameter] string $awsKey,
+        #[SensitiveParameter] string $awsSecret,
+        string $awsRegion,
+        ?string $awsEndpoint = null,
+    ): array {
+        $config = [
             'version' => 'latest',
             'region' => $awsRegion,
             'credentials' => [
                 'key' => $awsKey,
                 'secret' => $awsSecret,
             ],
-        ]);
+        ];
+
+        if ($awsEndpoint !== null && $awsEndpoint !== '') {
+            $config['endpoint'] = $awsEndpoint;
+            $config['use_path_style_endpoint'] = true;
+        }
+
+        return $config;
     }
 
     /** Uploads the backup and returns the S3 key it was stored under. */

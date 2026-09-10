@@ -27,6 +27,31 @@ final class AwsProviderTest extends TestCase
         );
     }
 
+    public function testCreateClientConfigTargetsRealAwsWithoutEndpoint(): void
+    {
+        $config = AwsProvider::createClientConfig('key', 'secret', 'eu-central-1');
+
+        self::assertSame('eu-central-1', $config['region']);
+        self::assertSame(['key' => 'key', 'secret' => 'secret'], $config['credentials']);
+        self::assertArrayNotHasKey('endpoint', $config);
+        self::assertArrayNotHasKey('use_path_style_endpoint', $config);
+    }
+
+    public function testCreateClientConfigUsesPathStyleForCustomEndpoint(): void
+    {
+        $config = AwsProvider::createClientConfig('key', 'secret', 'us-east-1', 'http://127.0.0.1:9000');
+
+        self::assertSame('http://127.0.0.1:9000', $config['endpoint'] ?? null);
+        self::assertTrue($config['use_path_style_endpoint'] ?? false);
+    }
+
+    public function testCreateClientConfigTreatsEmptyEndpointAsAbsent(): void
+    {
+        $config = AwsProvider::createClientConfig('key', 'secret', 'us-east-1', '');
+
+        self::assertArrayNotHasKey('endpoint', $config);
+    }
+
     public function testSelectObjectsToDeleteKeepsAllWhenWithinLimit(): void
     {
         $contents = [

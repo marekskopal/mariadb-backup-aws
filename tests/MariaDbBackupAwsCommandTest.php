@@ -38,5 +38,8 @@ final class MariaDbBackupAwsCommandTest extends TestCase
         self::assertTrue($definition->hasOption('aws-bucket'));
         self::assertTrue($definition->hasOption('aws-root-path'));
         self::assertTrue($definition->hasOption('aws-max-backups'));
+        self::assertTrue($definition->hasOption('aws-endpoint'));
+        self::assertTrue($definition->hasOption('port'));
+        self::assertTrue($definition->hasOption('dump-options'));
     }
 }
