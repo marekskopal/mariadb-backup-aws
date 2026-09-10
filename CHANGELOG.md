@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-10
+
+Fixes a release-blocking fatal error in the console entrypoint: v0.3.1 and v1.0.0 could
+not run at all. Anyone on either version should upgrade.
+
 ### Fixed
 - **`bin/console` no longer fatals on every invocation.** The entrypoint called `Application::add()`, which symfony/console 8 removed in favour of `addCommand()`, so v0.3.1 and v1.0.0 (Composer package and Docker image alike) died with `PHP Fatal error: Call to undefined method Symfony\Component\Console\Application::add()` before any backup ran. No test executed the binary, so the suite stayed green.
 
@@ -71,7 +76,8 @@ First stable release, hardening the backup workflow for production use.
 - Cron file
 - Backup deletion (rotation)
 
-[Unreleased]: https://github.com/marekskopal/mariadb-backup-aws/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/marekskopal/mariadb-backup-aws/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/marekskopal/mariadb-backup-aws/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/marekskopal/mariadb-backup-aws/compare/v0.3.1...v1.0.0
 [0.3.1]: https://github.com/marekskopal/mariadb-backup-aws/compare/v0.2.0...v0.3.1
 [0.2.0]: https://github.com/marekskopal/mariadb-backup-aws/compare/v0.1.0...v0.2.0
