@@ -76,4 +76,4 @@ Because `composer.lock` is not committed, the Docker image resolves dependencies
 - All classes use `declare(strict_types=1)`; the two service classes are `final readonly`
 - Sensitive parameters (passwords, AWS keys) are annotated with `#[SensitiveParameter]`
 - PHPStan level 9, PHP ≥ 8.4
-- Public methods exposed only for unit testing are annotated `@api` (required by the `unused-public` rule)
+- Dead code is detected by `shipmonk/dead-code-detector` (PHPStan extension). Usages from `tests/` count, so test-only public methods pass; they are still annotated `@api` to document the intent

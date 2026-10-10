@@ -28,11 +28,11 @@
         "phpstan/phpstan-phpunit": "^2.0.18",
         "phpstan/phpstan-strict-rules": "^2.0.12",
         "phpunit/phpunit": "^13.3.3",
+        "shipmonk/dead-code-detector": "^1.4.2",
         "shipmonk/phpstan-rules": "^4.4",
         "slevomat/coding-standard": "^8.31.1",
         "spatie/ray": "^1.48",
-        "tomasvotruba/cognitive-complexity": "^1.2",
-        "tomasvotruba/unused-public": "^2.2.1"
+        "tomasvotruba/cognitive-complexity": "^1.2"
     },
     "autoload": {
         "psr-4": {
