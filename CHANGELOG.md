@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-21
+
+Maintenance release: PHP base image update and test tooling changes. No functional changes to the backup workflow.
+
+### Changed
+- Updated the Docker base image to php 8.5.12-cli-alpine
+- Replaced `tomasvotruba/unused-public` with `shipmonk/dead-code-detector` for dead-code detection in static analysis
+- End-to-end tests now use the `pgsty/minio` image (RELEASE.2026-08-04T00-00-00Z) as the S3-compatible stand-in
+
 ## [1.0.1] - 2026-09-10
 
 Fixes a release-blocking fatal error in the console entrypoint: v0.3.1 and v1.0.0 could
@@ -76,7 +85,8 @@ First stable release, hardening the backup workflow for production use.
 - Cron file
 - Backup deletion (rotation)
 
-[Unreleased]: https://github.com/marekskopal/mariadb-backup-aws/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/marekskopal/mariadb-backup-aws/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/marekskopal/mariadb-backup-aws/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/marekskopal/mariadb-backup-aws/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/marekskopal/mariadb-backup-aws/compare/v0.3.1...v1.0.0
 [0.3.1]: https://github.com/marekskopal/mariadb-backup-aws/compare/v0.2.0...v0.3.1
